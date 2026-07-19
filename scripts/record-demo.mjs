@@ -82,7 +82,7 @@ const probeDuration = async (filePath) => {
     "-v", "error", "-show_entries", "format=duration", "-of", "default=nw=1:nk=1", filePath,
   ]);
   const duration = Number(stdout.trim());
-  if (!Number.isFinite(duration) || duration <= 0) throw new Error(`Invalid audio: ${filePath}`);
+  if (!Number.isFinite(duration) || duration <= 0) throw new Error(`Invalid media: ${filePath}`);
   return duration;
 };
 
@@ -224,6 +224,9 @@ const step = async (page, timed, index, action) => {
   await showCaption(page, timed[index].voiceover);
   if (action) await action();
   const remaining = timed[index].duration * 1000 - (Date.now() - started);
+  if (remaining < -250) {
+    throw new Error(`Demo segment ${index + 1} exceeded its audio slot by ${Math.abs(remaining).toFixed(0)}ms`);
+  }
   if (remaining > 0) await pause(remaining);
 };
 
@@ -293,13 +296,15 @@ const duration = timed.reduce((total, segment) => total + segment.duration, 0);
 await writeFile(finalSubtitles, buildSrt(timed));
 await copyFile(finalSubtitles, publicSubtitles);
 await record(timed);
+const recordedDuration = await probeDuration(rawVideo);
+const visualLead = Math.max(0, recordedDuration - duration);
 
 const videoCodecArgs = process.platform === "darwin"
   ? ["-c:v", "h264_videotoolbox", "-b:v", "3500k", "-maxrate", "5000k", "-profile:v", "high"]
   : ["-c:v", "libx264", "-preset", "fast", "-crf", "18"];
 
 await run("ffmpeg", [
-  "-y", "-i", rawVideo, "-i", narration,
+  "-y", "-ss", visualLead.toFixed(3), "-i", rawVideo, "-i", narration,
   "-vf", "fps=30,format=yuv420p,tpad=stop_mode=clone:stop_duration=12",
   "-t", duration.toFixed(3), "-map", "0:v:0", "-map", "1:a:0",
   "-af", "loudnorm=I=-16:TP=-1.5:LRA=9", ...videoCodecArgs,
@@ -310,3 +315,4 @@ await copyFile(finalVideo, publicVideo);
 console.log(`Video: ${finalVideo}`);
 console.log(`Subtitles: ${finalSubtitles}`);
 console.log(`Duration: ${duration.toFixed(1)} seconds`);
+console.log(`Visual lead trimmed: ${visualLead.toFixed(3)} seconds`);
