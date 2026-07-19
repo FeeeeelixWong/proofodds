@@ -73,7 +73,8 @@ export async function verifySettlement(
   );
   const fixture = normalizeFixture(fixtureProof.snapshot);
   const scoreEvents = await txlineGet<Array<Record<string, any>>>(`/scores/snapshot/${fixtureId}`);
-  const selectedEvent = [...scoreEvents].reverse().find(scoreEventFinal) || scoreEvents.at(-1);
+  const selectedEvent = [...scoreEvents].reverse().find(scoreEventFinal)
+    || scoreEvents[scoreEvents.length - 1];
 
   if (!selectedEvent) {
     const chain = await verifyFixtureOnChain(fixtureProof as any);

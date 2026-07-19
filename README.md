@@ -2,6 +2,8 @@
 
 ProofOdds is a verifiable resolution workbench for soccer prediction markets. It ingests TxLINE fixtures and score events, proves the selected final score against TxLINE's Solana program, and deterministically returns `SETTLE`, `DISPUTE`, or `HOLD` with a portable JSON receipt.
 
+Live MVP: https://proofodds.vercel.app
+
 ![ProofOdds resolving a simulated TxLINE replay](docs/images/proofodds-resolution.png)
 
 ## Why it exists
@@ -71,6 +73,12 @@ npm run check
 ```
 
 The suite verifies canonical hashing, settle/dispute/hold logic, stable receipt IDs, and the primary user interface.
+
+Run the deployed end-to-end smoke:
+
+```bash
+npm run smoke:online
+```
 
 ## API
 

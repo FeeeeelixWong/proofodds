@@ -15,7 +15,7 @@ ProofOdds is a verifiable soccer prediction-market resolution workbench. It inge
 ## Useful links
 
 - Repository: https://github.com/FeeeeelixWong/proofodds
-- Live MVP: deployment pending
+- Live MVP: https://proofodds.vercel.app
 - Demo video: upload pending
 
 ## What makes it prize-worthy
