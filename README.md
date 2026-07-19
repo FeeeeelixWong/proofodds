@@ -4,7 +4,7 @@ ProofOdds is a verifiable resolution workbench for soccer prediction markets. It
 
 Live MVP: https://proofodds.vercel.app
 
-![ProofOdds resolving a simulated TxLINE replay](docs/images/proofodds-resolution.png)
+![ProofOdds resolution workbench](docs/images/proofodds-resolution.png)
 
 ## Why it exists
 
@@ -23,15 +23,18 @@ ProofOdds does not custody funds or operate a wagering service. It is resolution
 
 | Criterion | What judges can verify |
 | --- | --- |
-| Core functionality | Live TxLINE API adapter, simulated replay feed, score event tape, Merkle proof retrieval, Solana `.view()` and transaction simulation, deterministic receipt export. |
+| Core functionality | Production deployment is connected to TxLINE devnet. Historical fixture `18257865` resolves from final sequence `1195` through a real `validateStatV2` simulation and deterministic receipt export. |
 | User experience | One screen covers fixture selection, match state, proposed outcome, proof progress, decision, and technical evidence. Replay mode keeps the full flow demonstrable after matches end. |
 | Code quality and logic | Resolution is a pure function in `server/resolution.ts`; receipt IDs are deterministic; API normalization accepts documented PascalCase and camelCase payloads; tests cover settle, dispute, hold, canonical hashing, and receipt stability. |
-| Demo readiness | The replay scenario always contains a complete event sequence and a final draw, so the demo can show both a matching proposal and a conflicting proposal without waiting for live activity. |
+| Demo readiness | Replay mode defaults to a completed TxLINE fixture, so the video can show both `SETTLE` and `DISPUTE` from the same cryptographically verified evidence after live activity ends. |
+
+![ProofOdds disputing a conflicting proposal while retaining Solana verification](docs/images/proofodds-dispute.png)
 
 ## Live and replay modes
 
-- **Live** uses `/fixtures/snapshot`, `/scores/snapshot/{fixtureId}`, `/scores/stat-validation`, and Solana devnet verification when `TXLINE_API_TOKEN` is configured.
-- **Replay** uses a clearly labeled, simulated TxLINE-shaped event sequence. It never presents simulated evidence as live or cryptographically verified.
+- **Live** uses `/fixtures/snapshot`, `/scores/snapshot/{fixtureId}`, `/scores/stat-validation`, and Solana devnet verification. The production deployment is configured for this path.
+- **Replay with TxLINE connected** requests a historical fixture window from the same live API and verifies the returned proof on Solana. It is the default judging path.
+- **Reference fallback** uses a clearly labeled, simulated TxLINE-shaped event sequence only when credentials or upstream APIs are unavailable. It never presents simulated evidence as live or cryptographically verified.
 - Both modes use the same selection and resolution interface. This prevents a dead demo when no match is active during judging.
 
 ## Architecture
@@ -79,6 +82,8 @@ Run the deployed end-to-end smoke:
 ```bash
 npm run smoke:online
 ```
+
+The smoke discovers a completed fixture, derives the matching proposal from its final score, and asserts `txline-live`, `validateStatV2`, `simulationStatus=passed`, and `decision=settle`.
 
 ## API
 

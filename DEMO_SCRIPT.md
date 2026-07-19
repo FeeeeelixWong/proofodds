@@ -1,4 +1,19 @@
-# Demo script (2:35 target)
+# Demo script (under 3 minutes)
+
+Generate the judged video from the real product with:
+
+```bash
+DEMO_APP_URL=https://proofodds.vercel.app npm run demo:record
+```
+
+Each narration segment is synthesized separately. Its measured audio duration drives the matching visual scene, and the same timeline generates the burned-in subtitles. This keeps voice, captions, and interaction timing aligned.
+
+Default voice: `en-US-AndrewMultilingualNeural` (warm, confident, conversational).
+
+Outputs:
+
+- `docs/media/proofodds-demo.mp4`
+- `docs/media/proofodds-demo.srt`
 
 ## 0:00-0:18 - Problem
 

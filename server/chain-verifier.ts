@@ -1,6 +1,13 @@
 import * as anchor from "@coral-xyz/anchor";
 import { BN, Program } from "@coral-xyz/anchor";
-import { ComputeBudgetProgram, Connection, Keypair, PublicKey } from "@solana/web3.js";
+import {
+  ComputeBudgetProgram,
+  Connection,
+  Keypair,
+  PublicKey,
+  TransactionMessage,
+  VersionedTransaction,
+} from "@solana/web3.js";
 import { createRequire } from "node:module";
 import type { ChainEvidence, ProofNode, ScoreStat } from "../shared/types.js";
 import { normalizeProof, toBytes32 } from "./normalize.js";
@@ -41,26 +48,41 @@ function createProgram() {
   if (program.programId.toBase58() !== txlineConfig.programId) {
     throw new Error("TxLINE IDL and configured program ID do not match");
   }
-  return { connection, wallet, program };
+  return { connection, program };
 }
 
 async function simulateAndView(
   builder: any,
   connection: Connection,
-  feePayer: PublicKey,
+  programId: PublicKey,
 ): Promise<{ passed: boolean; unitsConsumed?: number; logs: string[] }> {
-  const passed = Boolean(await builder.view());
   const tx = await builder.transaction();
-  tx.feePayer = feePayer;
-  tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
-  const simulation = await connection.simulateTransaction(tx);
+  const message = new TransactionMessage({
+    payerKey: new PublicKey(txlineConfig.simulationPayer),
+    recentBlockhash: (await connection.getLatestBlockhash("confirmed")).blockhash,
+    instructions: tx.instructions,
+  }).compileToV0Message();
+  const simulation = await connection.simulateTransaction(
+    new VersionedTransaction(message),
+    { sigVerify: false },
+  );
   if (simulation.value.err) {
-    throw new Error(`Solana simulation failed: ${JSON.stringify(simulation.value.err)}`);
+    const detail = JSON.stringify({
+      error: simulation.value.err,
+      logs: simulation.value.logs,
+    });
+    throw new Error(`Solana simulation failed: ${detail}`);
   }
+  const logs = simulation.value.logs || [];
+  const returnPrefix = `Program return: ${programId.toBase58()} `;
+  const returnLog = logs.find((line) => line.startsWith(returnPrefix));
+  if (!returnLog) throw new Error("Solana validation returned no program result");
+  const returnData = Buffer.from(returnLog.slice(returnPrefix.length), "base64");
+  const passed = returnData.length > 0 && returnData[0] === 1;
   return {
     passed,
     unitsConsumed: simulation.value.unitsConsumed ?? undefined,
-    logs: (simulation.value.logs || []).slice(-10),
+    logs: logs.slice(-10),
   };
 }
 
@@ -81,9 +103,25 @@ function chainEvidence(
   };
 }
 
+function describeError(error: unknown): string {
+  if (error instanceof Error) {
+    const detail = Object.fromEntries(
+      Object.getOwnPropertyNames(error)
+        .filter((key) => key !== "stack")
+        .map((key) => [key, (error as unknown as Record<string, unknown>)[key]]),
+    );
+    return JSON.stringify({ name: error.name, message: error.message, ...detail });
+  }
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return String(error);
+  }
+}
+
 export async function verifyFixtureOnChain(payload: FixtureProofPayload): Promise<ChainEvidence> {
   try {
-    const { connection, wallet, program } = createProgram();
+    const { connection, program } = createProgram();
     const snapshot = {
       ts: new BN(payload.snapshot.Ts ?? payload.snapshot.ts),
       startTime: new BN(payload.snapshot.StartTime ?? payload.snapshot.startTime),
@@ -127,7 +165,7 @@ export async function verifyFixtureOnChain(payload: FixtureProofPayload): Promis
       )
       .accounts({ tenDailyFixturesRoots: rootAccount })
       .preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 })]);
-    const result = await simulateAndView(builder, connection, wallet.publicKey);
+    const result = await simulateAndView(builder, connection, program.programId);
     return chainEvidence(
       result.passed ? "passed" : "failed",
       rootAccount.toBase58(),
@@ -135,13 +173,13 @@ export async function verifyFixtureOnChain(payload: FixtureProofPayload): Promis
       result.logs,
     );
   } catch (error) {
-    return chainEvidence("failed", undefined, undefined, [error instanceof Error ? error.message : String(error)]);
+    return chainEvidence("failed", undefined, undefined, [describeError(error)]);
   }
 }
 
 export async function verifyScoresOnChain(payload: ScoreProofPayload): Promise<ChainEvidence> {
   try {
-    const { connection, wallet, program } = createProgram();
+    const { connection, program } = createProgram();
     const targetTs = Number(payload.summary.updateStats.minTimestamp);
     const epochDay = Math.floor(targetTs / 86_400_000);
     const epochBuffer = new BN(epochDay).toArrayLike(Buffer, "le", 2);
@@ -188,7 +226,7 @@ export async function verifyScoresOnChain(payload: ScoreProofPayload): Promise<C
       .validateStatV2(validationInput, strategy)
       .accounts({ dailyScoresMerkleRoots: rootAccount })
       .preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 1_400_000 })]);
-    const result = await simulateAndView(builder, connection, wallet.publicKey);
+    const result = await simulateAndView(builder, connection, program.programId);
     return chainEvidence(
       result.passed ? "passed" : "failed",
       rootAccount.toBase58(),
@@ -196,6 +234,6 @@ export async function verifyScoresOnChain(payload: ScoreProofPayload): Promise<C
       result.logs,
     );
   } catch (error) {
-    return chainEvidence("failed", undefined, undefined, [error instanceof Error ? error.message : String(error)]);
+    return chainEvidence("failed", undefined, undefined, [describeError(error)]);
   }
 }

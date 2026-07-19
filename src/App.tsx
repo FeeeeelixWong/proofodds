@@ -29,6 +29,7 @@ import type {
 } from "../shared/types";
 
 type FeedMode = "live" | "replay";
+const judgingFixtureId = 18257865;
 
 const referenceFeed: FixtureFeed = {
   source: "txline-reference",
@@ -100,9 +101,15 @@ function App() {
       const nextFeed = await response.json() as FixtureFeed;
       if (!nextFeed.fixtures.length) throw new Error("TxLINE returned no fixtures for this window");
       setFeed(nextFeed);
-      setSelectedId((current) => nextFeed.fixtures.some((item) => item.fixtureId === current)
-        ? current
-        : nextFeed.fixtures[0].fixtureId);
+      setSelectedId((current) => {
+        const preferred = mode === "replay"
+          ? nextFeed.fixtures.find((item) => item.fixtureId === judgingFixtureId)
+          : undefined;
+        if (preferred) return preferred.fixtureId;
+        return nextFeed.fixtures.some((item) => item.fixtureId === current)
+          ? current
+          : nextFeed.fixtures[0].fixtureId;
+      });
     } catch {
       setFeed(referenceFeed);
       setSelectedId(referenceFixtures[0].fixtureId);
@@ -156,6 +163,7 @@ function App() {
       if (feed.source === "txline-reference") {
         setReceipt({
           ...referenceReceipt,
+          receiptId: `${referenceReceipt.receiptId}_${proposal}`,
           issuedAt: new Date().toISOString(),
           resolution: {
             proposal,
@@ -192,6 +200,8 @@ function App() {
   }
 
   const decision = receipt?.resolution.decision;
+  const referenceConflict = decision === "reference"
+    && receipt?.resolution.proposal !== receipt?.outcome.winner;
 
   return (
     <div className="app-shell">
@@ -356,13 +366,17 @@ function App() {
               )}
 
               {receipt && (
-                <div className={`decision-banner ${decision}`}>
+                <div className={`decision-banner ${decision} ${referenceConflict ? "reference-conflict" : ""}`}>
                   <span className="decision-icon">
-                    {decision === "dispute" ? <X size={24} /> : <Check size={24} />}
+                    {decision === "dispute" || referenceConflict ? <X size={24} /> : <Check size={24} />}
                   </span>
                   <div>
                     <span className="panel-kicker">RESOLUTION DECISION</span>
-                    <h2>{decision === "reference" ? "REFERENCE RESULT" : decision?.toUpperCase()}</h2>
+                    <h2>
+                      {decision === "reference"
+                        ? referenceConflict ? "REFERENCE CONFLICT" : "REFERENCE MATCH"
+                        : decision?.toUpperCase()}
+                    </h2>
                     <p>{receipt.resolution.reason}</p>
                   </div>
                   <div className="resolved-outcome">

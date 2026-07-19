@@ -26,7 +26,7 @@ sequenceDiagram
     TX-->>API: sequence + status + stats
     API->>TX: Merkle proof for stat keys 1,2
     TX-->>API: proof payload
-    API->>SOL: validateStatV2 view + simulation
+    API->>SOL: validateStatV2 read-only simulation
     SOL-->>API: boolean + logs + compute units
     API->>API: deterministic resolution
     API-->>UI: settlement receipt
@@ -34,7 +34,7 @@ sequenceDiagram
 
 - The browser never receives the TxLINE API token.
 - The server does not sign or submit a settlement transaction.
-- The generated Anchor wallet is used only as a simulation fee payer.
+- Simulation uses an existing public devnet account as fee payer with signature verification disabled. Its private key is never present in the application, and simulation cannot spend its balance.
 - `passed` is displayed only after the official program returns true and simulation has no error.
 - Replay records are labeled `txline-reference` and `SIMULATED REPLAY` throughout the interface and receipt.
 

@@ -10,7 +10,6 @@ import {
   Keypair,
   PublicKey,
   Transaction,
-  sendAndConfirmTransaction,
 } from "@solana/web3.js";
 import { existsSync } from "node:fs";
 import { chmod, mkdir, readFile, writeFile } from "node:fs/promises";
@@ -52,6 +51,31 @@ async function guestJwt() {
   return (await response.json()).token;
 }
 
+async function sendWithHttpConfirmation(connection, transaction, wallet) {
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    const latest = await connection.getLatestBlockhash("confirmed");
+    transaction.recentBlockhash = latest.blockhash;
+    transaction.feePayer = wallet.publicKey;
+    transaction.sign(wallet);
+    const signature = await connection.sendRawTransaction(transaction.serialize(), {
+      maxRetries: 5,
+      skipPreflight: false,
+    });
+
+    while (await connection.getBlockHeight("confirmed") <= latest.lastValidBlockHeight) {
+      const status = (await connection.getSignatureStatuses([signature])).value[0];
+      if (status?.err) throw new Error(`Transaction ${signature} failed: ${JSON.stringify(status.err)}`);
+      if (status?.confirmationStatus === "confirmed" || status?.confirmationStatus === "finalized") {
+        return signature;
+      }
+      await new Promise((resolveWait) => setTimeout(resolveWait, 1_200));
+    }
+
+    console.warn(`Transaction attempt ${attempt} expired; signing again with a fresh blockhash.`);
+  }
+  throw new Error("Transaction could not be confirmed after three fresh blockhashes.");
+}
+
 async function main() {
   if (existsSync(envPath) && (await readFile(envPath, "utf8")).includes("TXLINE_API_TOKEN=")) {
     console.log("TxLINE is already activated in .env.local; no subscription transaction was sent.");
@@ -85,7 +109,7 @@ async function main() {
         ASSOCIATED_TOKEN_PROGRAM_ID,
       ),
     );
-    await sendAndConfirmTransaction(connection, createAccount, [wallet], { commitment: "confirmed" });
+    await sendWithHttpConfirmation(connection, createAccount, wallet);
   }
 
   const [pricingMatrix] = PublicKey.findProgramAddressSync(
@@ -118,12 +142,7 @@ async function main() {
       systemProgram: anchor.web3.SystemProgram.programId,
     })
     .transaction();
-  const latest = await connection.getLatestBlockhash("confirmed");
-  transaction.recentBlockhash = latest.blockhash;
-  transaction.feePayer = wallet.publicKey;
-  transaction.sign(wallet);
-  const txSig = await connection.sendRawTransaction(transaction.serialize());
-  await connection.confirmTransaction({ signature: txSig, ...latest }, "confirmed");
+  const txSig = await sendWithHttpConfirmation(connection, transaction, wallet);
 
   const message = new TextEncoder().encode(`${txSig}::${jwt}`);
   const walletSignature = Buffer.from(nacl.sign.detached(message, wallet.secretKey)).toString("base64");
@@ -133,7 +152,13 @@ async function main() {
     body: JSON.stringify({ txSig, walletSignature, leagues: [] }),
   });
   if (!activation.ok) throw new Error(`TxLINE activation failed (${activation.status}): ${await activation.text()}`);
-  const result = await activation.json();
+  const activationBody = await activation.text();
+  let result;
+  try {
+    result = JSON.parse(activationBody);
+  } catch {
+    result = activationBody.trim();
+  }
   const apiToken = typeof result === "string" ? result : result.token;
   if (!apiToken) throw new Error("TxLINE activation returned no API token");
 

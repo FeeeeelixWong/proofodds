@@ -16,6 +16,7 @@ function applyReferenceProposal(proposal: MarketProposal): SettlementReceipt {
   const matches = proposal === referenceReceipt.outcome.winner;
   return {
     ...referenceReceipt,
+    receiptId: `${referenceReceipt.receiptId}_${proposal}`,
     issuedAt: new Date().toISOString(),
     resolution: {
       proposal,

@@ -1,0 +1,36 @@
+1
+00:00:00,000 --> 00:00:09,190
+A World Cup market should not settle because one API returned a score. It should settle because the result is reproducible.
+
+2
+00:00:09,190 --> 00:00:19,316
+ProofOdds is a deterministic resolution workbench for analysts and prediction-market operators, built around TxLINE fixture and score feeds.
+
+3
+00:00:19,316 --> 00:00:32,586
+For reproducibility after matches end, I use historical replay while staying connected to the live TxLINE API. Ordered events reconstruct the match through the final four-six score.
+
+4
+00:00:32,586 --> 00:00:45,586
+I propose Participant Two and run verification. ProofOdds selects final sequence eleven ninety-five, derives the outcome, and validates score keys one and two.
+
+5
+00:00:45,586 --> 00:00:58,640
+The Solana simulation passes and the proposal settles. The audit receipt exposes source, payload hash, proof depths, root account, program ID, and compute units.
+
+6
+00:00:58,640 --> 00:01:19,640
+Now I submit Participant One for the same proof. The engine does not rubber-stamp it. The proven Participant Two win conflicts with the proposal, so ProofOdds returns dispute. The receipt stays Solana verified; only the deterministic market decision changes.
+
+7
+00:01:19,640 --> 00:01:35,640
+The resolution state machine is small and testable. Final plus verified plus matching means settle. A verified mismatch means dispute. Missing finality or failed proof means hold.
+
+8
+00:01:35,640 --> 00:01:53,640
+The live path calls TxLINE fixture, score, and stat-validation endpoints, then simulates validate Stat V two against the official devnet program. No private key is required and no wagering funds are handled.
+
+9
+00:01:53,640 --> 00:02:02,640
+ProofOdds makes soccer settlement understandable to users, deterministic for engineers, and auditable for market operators.
+

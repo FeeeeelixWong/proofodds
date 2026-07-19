@@ -23,6 +23,8 @@ export const txlineConfig = {
   rpcUrl: process.env.SOLANA_RPC_URL || defaults[network].rpcUrl,
   programId: defaults[network].programId,
   apiToken: process.env.TXLINE_API_TOKEN,
+  simulationPayer: process.env.SOLANA_SIMULATION_PAYER
+    || "GjKQpbBMw6nbJGeDJeoygtQBS4hC6J7Lzp96aFNg8CEq",
 };
 
 export const hasLiveCredentials = Boolean(txlineConfig.apiToken);

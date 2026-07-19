@@ -127,6 +127,7 @@ button:focus-visible, a:focus-visible { outline: 3px solid rgba(45, 89, 216, 0.2
 .decision-banner { margin: 20px 26px; min-height: 112px; display: grid; grid-template-columns: 48px 1fr auto; align-items: center; gap: 15px; padding: 18px; color: #17472f; background: #e3f4e9; border: 1px solid #b9ddc6; border-radius: 7px; }
 .decision-banner.dispute { color: #8c2a1e; background: #fde9e5; border-color: #f0c2ba; }
 .decision-banner.reference { color: #594815; background: #fff4cf; border-color: #ecd98c; }
+.decision-banner.reference-conflict { color: #8c2a1e; background: #fde9e5; border-color: #f0c2ba; }
 .decision-icon { width: 44px; height: 44px; display: grid; place-items: center; color: white; background: var(--green); border-radius: 50%; }
 .dispute .decision-icon { background: var(--coral); }
 .reference .decision-icon { color: #30270c; background: var(--yellow); }

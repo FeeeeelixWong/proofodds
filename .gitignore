@@ -3,6 +3,10 @@ dist
 .vercel
 .env
 .env.local
+tmp/
+docs/media/review/
+docs/media/*.mp4
+public/proofodds-demo.mp4
 .DS_Store
 coverage
 output
