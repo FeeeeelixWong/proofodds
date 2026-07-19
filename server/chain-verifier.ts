@@ -1,10 +1,13 @@
 import * as anchor from "@coral-xyz/anchor";
 import { BN, Program } from "@coral-xyz/anchor";
 import { ComputeBudgetProgram, Connection, Keypair, PublicKey } from "@solana/web3.js";
+import { createRequire } from "node:module";
 import type { ChainEvidence, ProofNode, ScoreStat } from "../shared/types.js";
-import txoracleIdl from "./idl/txoracle.json";
 import { normalizeProof, toBytes32 } from "./normalize.js";
 import { txlineConfig } from "./config.js";
+
+const require = createRequire(import.meta.url);
+const txoracleIdl = require("./idl/txoracle.json") as anchor.Idl;
 
 interface FixtureProofPayload {
   snapshot: Record<string, any>;
