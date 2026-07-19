@@ -1,4 +1,4 @@
-import type { Fixture, ProofNode, ScoreEvent, ScoreStat } from "../shared/types";
+import type { Fixture, ProofNode, ScoreEvent, ScoreStat } from "../shared/types.js";
 
 export function normalizeFixture(input: Record<string, any>): Fixture {
   return {

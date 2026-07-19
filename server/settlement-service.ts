@@ -4,13 +4,13 @@ import type {
   ScoreEvent,
   ScoreStat,
   SettlementReceipt,
-} from "../shared/types";
-import { referenceFixtures, referenceReceipt, referenceScoreEvents } from "../shared/reference";
-import { hasLiveCredentials, txlineConfig } from "./config";
-import { verifyFixtureOnChain, verifyScoresOnChain } from "./chain-verifier";
-import { normalizeFixture, normalizeScoreEvent, normalizeStat } from "./normalize";
-import { createReceipt } from "./receipt";
-import { txlineGet } from "./txline-client";
+} from "../shared/types.js";
+import { referenceFixtures, referenceReceipt, referenceScoreEvents } from "../shared/reference.js";
+import { hasLiveCredentials, txlineConfig } from "./config.js";
+import { verifyFixtureOnChain, verifyScoresOnChain } from "./chain-verifier.js";
+import { normalizeFixture, normalizeScoreEvent, normalizeStat } from "./normalize.js";
+import { createReceipt } from "./receipt.js";
+import { txlineGet } from "./txline-client.js";
 
 function applyReferenceProposal(proposal: MarketProposal): SettlementReceipt {
   const matches = proposal === referenceReceipt.outcome.winner;

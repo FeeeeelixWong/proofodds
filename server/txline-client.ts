@@ -1,4 +1,4 @@
-import { hasLiveCredentials, txlineConfig } from "./config";
+import { hasLiveCredentials, txlineConfig } from "./config.js";
 
 let cachedJwt: { token: string; expiresAt: number } | undefined;
 

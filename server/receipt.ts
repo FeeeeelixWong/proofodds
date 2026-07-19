@@ -1,7 +1,7 @@
-import type { Fixture, MarketProposal, SettlementReceipt } from "../shared/types";
-import { sha256 } from "./hash";
-import { txlineConfig } from "./config";
-import { resolveMarket } from "./resolution";
+import type { Fixture, MarketProposal, SettlementReceipt } from "../shared/types.js";
+import { sha256 } from "./hash.js";
+import { txlineConfig } from "./config.js";
+import { resolveMarket } from "./resolution.js";
 
 interface ReceiptInput {
   fixture: Fixture;

@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import type { MarketProposal } from "../shared/types";
-import { listFixtures, listScoreEvents, verifySettlement } from "../server/settlement-service";
+import type { MarketProposal } from "../shared/types.js";
+import { listFixtures, listScoreEvents, verifySettlement } from "../server/settlement-service.js";
 
 const proposals = new Set<MarketProposal>(["participant-1", "draw", "participant-2"]);
 

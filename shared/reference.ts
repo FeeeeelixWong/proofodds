@@ -1,4 +1,4 @@
-import type { Fixture, ScoreEvent, SettlementReceipt } from "./types";
+import type { Fixture, ScoreEvent, SettlementReceipt } from "./types.js";
 
 export const referenceFixtures: Fixture[] = [
   {

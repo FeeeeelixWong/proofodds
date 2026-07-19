@@ -2,7 +2,7 @@ import type {
   MarketProposal,
   ResolutionDecision,
   SettlementState,
-} from "../shared/types";
+} from "../shared/types.js";
 
 export type ProvenWinner = MarketProposal | "undetermined";
 
