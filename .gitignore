@@ -5,8 +5,11 @@ dist
 .env.local
 tmp/
 docs/media/review/
+docs/media/social/
 docs/media/*.mp4
+docs/SOCIAL_POST.md
 public/proofodds-demo.mp4
+scripts/capture-social-assets.mjs
 .DS_Store
 coverage
 output

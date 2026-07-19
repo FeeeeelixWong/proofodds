@@ -10,7 +10,6 @@
     "preview": "vite preview",
     "activate:txline": "node scripts/activate-txline.mjs",
     "demo:record": "node scripts/record-demo.mjs",
-    "social:capture": "node scripts/capture-social-assets.mjs",
     "smoke:online": "node scripts/smoke-online.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
